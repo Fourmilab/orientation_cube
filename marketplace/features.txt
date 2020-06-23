@@ -1,0 +1,11 @@
+Labeled cube allows experiments with LSL rotations and translations (moves).
+
+Supports both local and region (global) coordinates.
+
+Compose rotations and translations in global or local coordinates.
+
+Angles can be entered and displayed in degrees or radians.
+
+Supports almost all LSL rotation and translation functions.
+
+Accepts commands via local chat; complete Undo facility.

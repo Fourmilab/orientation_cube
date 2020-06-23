@@ -1,0 +1,578 @@
+
+                  Fourmilab Orientation Cube
+                        Development Log
+
+2019 December 5
+
+The cube is rezzed aligned with the world X, Y, and Z axes with
+its faces colour coded as follows.
+
+         +        -
+    X   Red     Cyan
+    Y   Green   Magenta
+    Z   Blue    Yellow
+
+Note the opposite faces on each axis bear complementary colours
+as an aid to memory.
+
+Each positive axis has a five metre "probe" with the same colour
+as the axis which can be displayed or hidden by the "probe"
+command.  This allows verification of correct alignment when
+pointing at targets.
+
+Added our standard display of script memory usage to the
+"status" commmand.
+
+Extracted the command parsing and processing from the listen()
+event into a proper processCommand() function for easier
+maintenance and to make the main event processor more
+comprehensible.
+
+Added a general parser of axis specifications: axes(), which
+takes a string specifying one or more axes ("x", "y", "z")
+with lower case assumed (processCommand() will have forced
+to lower before calling this function) and returns a bitmap
+of x=1, y=2, z=4.  If an invalid axis is specified, -1 is
+returned.
+
+Using the axis() function, rewrote the "probe" command handler
+to accept multiple axes.  In addition, the "probes" command acts
+on all axes as if "xyz" were specified.  For example:
+    probe x on
+    probe yz on
+    probe y off
+    probes off
+    probes on
+
+Added a command line preprocessing function, fixArgs(), which
+converts the command line to lower case and elides any white
+space within "<>" brackets, allowing the subsequent parsing by
+llParseString2List() to see vectors and rotations as single
+arguments even if the user typed spaces within the brackets.
+
+Modified the "rot" command to take a vector specifying Euler
+angles in degrees instead of three numbers which it painfully
+assembled into a vector.  The fixArgs() preprocessing makes this
+a one-liner.
+
+Fixed incorrect composition of the specified rotation in the
+"rot" command with the current rotation so that the rotation is
+performed to the object's local axes.
+
+Modified the "target" command to take advantage of fixArgs()
+and accept a vector for the position instead of a triple of
+numbers.
+
+Implemented a proper Undo command.  Every change in position
+and rotation pushes a [ rotation, position ] pair on the undo
+list in undoSave(), and the Undo command pops the first pair
+from the list and restores them as the current rotation and
+position.
+
+Added a "Qrot" command which works like "Rot", but takes a
+rotation expressed as a four-element quaternion.  Since
+quaternions are like normalised vectors, it makes no sense
+to convert them to degrees, so they are always input and
+output as the internal values of the components.
+
+Added a "set access" command with values of "owner", "group",
+or "public" to control who may send commands.  Access is set to
+owner when the object is restarted.
+
+Added a "set legend" command to turn the floating text legend on
+and off.  The legend is hidden by setting its colour to black
+and alpha to zero, but while off the updating of the legend is
+suppressed.  When the legend is re-enabled, it is immediately
+updated to reflect the state of the object.
+
+Implemented the "Axes" command.  This transforms the local X, Y,
+and Z axes unit vectors into global co-ordinates and prints the
+resulting vectors.  This handy when you want to try rotation
+specifications which take a global direction vector as an
+argument.
+
+Added a hideous hack so a prefix of "ll" is permitted and
+ignored on our commands.  This allows us to define commands
+which mirror LSL function names and optionally accept the full
+function name if that's what the user remembers better.
+
+Added a "set angles degree/radian" command to specify whether
+angles are input and displayed in radians.  The "status"
+command shows the current angle setting.
+
+Added a "move" command which takes a vector argument and moves
+the object in the specified direction in either local or (if
+prefixed with "global") region co-ordinates.
+
+Added a position display to the legend and status command.  The
+position is relative to the initial position saved in
+refPos when the script last initialised at state_entry(),
+which can be forced with the restart command.  The reset
+command restores the object to the position saved in
+refPos.
+
+2019 December 6
+
+Initial experimentation seemed to indicate that you couldn't sit
+on a phantom object, but further testing shows that it works
+just fine.  Consequently, there is no need for the "set phantom"
+command on the to do list, and it has been removed.  If, for
+some other reason, the user wishes to make the object
+non-phantom, this is easily done from the Edit dialogue.
+
+Added code to the "status" display to show the names of any
+avatars seated on the object.  Confirmed that seated avatars
+move and rotate with the object.  This is only a problem,
+requiring explicit code to reposition the avatar, when changing
+the relative position of linked components on which avatars are
+seated within linked objects.  In this case, the entire link set
+remains rigid, so the avatar moves with it.
+
+Added an expansion facility for named constants such as PI,
+TWO_PI, and PI_BY_TWO, which are handy when specifying angles
+in radians.  The list constants declares pairs of constant
+names and values (expressed as strings), and must be arranged
+so common substrings appear later in the list to avoid spurious
+matches.  These replacements apply anywhere in commands, and may
+be used as angles or within vectors and rotations.  Note that
+since the expansion is purely symbolic, a leading minus sign
+works with them.
+
+Created textures for the faces of the cube with axis and +/-
+labels to further clarify the orientation and colour code.
+The font used is "Libre Baskerville Bold" at 256 pixels.
+
+Implemented LSL function analogue commands.  All have the same
+names and arguments as their models and may be entered with
+or without the "ll" prefix.  They all compose the resulting
+rotation with the existing rotation of the object according
+to the presense or absence of the "global" modifier.
+    llAxisAngle2Rot <X, Y, Z> angle
+    llAxes2Rot <forward> <left> <up>
+    llRotBetween <start> <end>
+
+2019 December 7
+
+Added llEuler2Rot as a synonym for the "Rot" command.
+
+Added a llSetRot command which sets absolute rotation to the
+specified Euler angle vector.  Note that this function is always
+global and that the global prefix does nothing if specified.
+
+Created three new orthogonal global axis probes named "Global X
+Probe", etc.  These are presently 1.5 metre long, meet at the
+initial centre of the cube, are slightly larger in diameter than
+the probes that move with the cube, and are in subdued versions
+of their colours.  (I may revise the presentation after further
+experimentation when I get the thing actually working.) These
+are linked to the object with link numbers inside the script
+like lProbeXG.
+
+Extended the Probe/Probes command to recognise the Global
+modifier and, if set, act on the visibility of the global probes
+instead of the local probes which move with the cube.  The
+global probes, like the local ones, are cleared at state_entry()
+time.
+
+2019 December 8
+
+Added our standard "set channel" command to allow changing the
+chat channel on which we listen for commands.
+
+The initial version of global probes (axes) seems to be working.
+The approach is to save the global region orientation (position
+and rotation) of these axes when they are originally created
+with saveGlobalAxes() and then, after every subsequent rotation
+and translation operation, put the axes, which will have been
+transformed due to being linked to the root prim, back where
+they belong in restoreGlobalAxes(), which applies a new region
+to local transformation to their saved region orientation based
+upon the root prim's post-transformation position and rotation.
+Done directly, this causes an unsightly dance of the axes
+with the cube, then back to where they belong.  Use of the
+functions hideGlobalAxes() and showGlobalAxes() across these
+operations reduces (but does not entirely eliminate) this
+distraction.
+
+2019 December 9
+
+Added indicators to the textures for the faces of the cube to
+show the direction in which that face rotates when rotated by a
+positive angle along that axis.  Positive axis faces rotate
+counterclockwise (U+21BA), while negative faces rotate clockwise
+(U+21BB).
+
+Added a child cube, half the size of the the main cube, which
+is a child prim of the root.  It is initially positioned at
+half the length of the global axis probes in each positive axis
+direction.  The child cube is initially hidden, and can be
+displayed or hidden with the "set child on/off" command.
+
+To reduce land impact, the child cube has no axis indicators
+or probes, just faces colour coded and labeled the same as the
+parent cube.  Since the parent cube is there to refer to, this
+should be adequate.
+
+All of the rotation and translation commands can be made to act
+on the child cube by prefixing them with the "child" modifier.
+For example:
+    child roty 30
+    child move <0, 0, 0.5>
+These are transformations on the child cube itself, relative to
+its own co-ordinate system.  If you also use the "global" modifier
+(which may appear before or after "child"), the transformations are
+relative to the co-ordinate system of the parent root prim.  (Note,
+not region co-ordinates, as is the case for the root prim.)  The
+command:
+    child global move <1, 0, 0>
+moves the child cube one metre in the direction the positive X
+axis of the parent cube is pointing at the moment.
+
+Added the ability to run scripts stored in the contents of the
+root prim.  A new "Run scriptname" command runs the script.  As
+presently implemented, the scriptname must be a single
+identifier and all lower case (I may add some hackery to
+loosen these constraints).  Scripts may contain run commands:
+a stack handles nesting of scripts.  Comments in scripts are
+denoted by a "#" as the first nonblank character.
+
+2019 December 10
+
+Added child cube position and and orientation to the status
+command.  Child cube information is only shown when the child cube
+is visible.  Co-ordinates shown are relative (_LOCAL) to the
+root prim.
+
+Added code to reset_state() to return the child cube to its
+initial position.  This is done whether the child cube is
+visible or not.  I could implement it so the child is controlled
+separately with "child reset", but this might be confusing since
+there is only one undo stack.  I think it's better if "reset"
+means reset the whole thing.
+
+2019 December 11
+
+Added a legend for the child cube.  The legend is initially off
+and is not shown unless the child cube is displayed.  The child
+legend is controlled by prefixing the "set legend" command with
+the "child" modifier, for example:
+    child set legend [on/off]
+The child legend always displays the rotation (Euler angles
+only) and position relative (_LOCAL) to the root prim.  The
+child legend is displayed in subdued yellow to distinguish it
+from the legend for the main cube.
+
+Added a "region" modifier, like "global" and "child".  For
+commands which operate on the root prim, "global" and
+"region" are synonyms.  When the "child" modifier is specified,
+the modifiers operate as follows:
+    [none]  Operate in child co-ordinates
+    global  Operate in root prim co-ordinates
+    region  Operate in region co-ordinates
+The handling of the region modifier is performed in the compLG()
+function for rotations and directly in the SetPos/Move command
+for translations.  It uses the code developed experimentally
+in the Test command which transforms the rotation and position
+of the child prim to region co-ordinates, applies the operation,
+then transforms the result back into root-relative (_LOCAL)
+co-ordinates and applies them to the child's link.  This code
+can serve as a model for developers faced with a similar
+requirement.
+
+2019 December 12
+
+If a command is prefixed with "@", it will not be echoed, just
+as in a Unix makefile.  This allows scripts to have silent
+commands that are not echoed, which can be handy in scripted
+demonstrations where internal control commands would only be
+confusing.
+
+Added a timed execution facility for scripts.  The "set runrate
+t" command causes commands from scripts to be run at a rate
+of one command per t seconds (which may be a decimal fraction).
+Comments, blank lines, and quoted lines echoed to local chat
+are not subject to the timed execution.  Timed execution is
+implemented by having the dataserver() event which processes
+script commands set a timer() event to query for the next
+line if ncrate is nonzero.  Otherwise, it immediately requests
+the line (as it does after comments, etc.).
+
+A running script can be paused by the "pause" command.  This
+suspends execution of the script until the model is touched,
+at which time execution will resume.  The pause command works
+regardless of whether timed execution is in effect or not.
+
+The state_entry() event handler restored the position of the
+global axis probes before calling resetState().  This had the
+result that if the main cube had been rotated with respect
+to the region co-ordinates at the time, the probes would
+also be rotated.  I moved the call on resetState() to
+before positioning the axes.
+
+One more little twist: the reset command failed to call
+resetState() before llResetScript().  If the cube has been
+translated, its reference position would be reset to wherever
+it was left before the reset command.  I added a resetState() to
+ensure the cube is restored to its reference position before
+resetting the script.
+
+Oops!  When calling resetState() in the state_entry() event,
+the scale factor for the child cube had not yet been obtained
+from the global axis probes, which resulted in the child cube
+being positioned at the centre of the main cube.  I moved the
+scaling code up and now the child is back where it belongs.
+
+2020 June 8
+
+Back to work on the Orientation Cube after a long hiatus getting the
+Rocket and Anvil Tosser and Target out the door.  Brought the nascent
+user guide, notecards/orientation.nc, up to date with respect to the
+current state of the code and improved consistency of formatting.
+I clarified the distinction between Region and Grid co-ordinates,
+but I'm not sure I'm all the way there in terms of elmininating
+confusion with respect to the word ""Global".
+
+2020 June 15
+
+Integrated the ef() function from the Rocket, which formats the raw
+result from casting a float to a string to something more
+comprehensible to primates: eliminate trailing zeroes in the decimal
+part and drop the fractional part if it's integral.  Applied this
+everywhere we format numbers to display to the user or to show in
+floating text.
+
+Integrated the abbrP() and onOff() functions from the standard
+Fourmilab object user interface and used to allow abbreviating all chat
+and script commands and parameters to two character or the shortest
+unique abbreviation, whichever is longer.  Note that due to or
+moderately complex command language with modifiers, optional prefixes,
+etc., this isn't always obvious.  For example, "region" cannot be
+abbreviated shorter than "reg", since otherwise it would be ambiguous
+with the "reset" and "restart" commands, both of which cannot be
+abbreviated shorter than four characters.  While wizards may wish to
+use very short abbreviations in flying fingers mode when doing
+demonstrations, in scripts it's best to completely write out all
+commands, both for clarity and to future-proof against the introduction
+of new command which require more specificity in abbreviations.  This
+will all require exhaustive testing to make sure the myriad changes
+haven't broken something.
+
+Integrated logic to support the "Set echo" command to control whether
+commands are echoed to the sender in local chat, and to prefix echoed
+commands with ">>" if they are from chat and "++" if from a script.
+
+Made the ad hoc "Paused" message standard and clarified it to:
+    Script paused.  Touch to resume.
+so the user will know what to do when a script pauses even if it
+doesn't say why it did.
+
+Added a Help command which gives the requester the User Guide notecard
+from the inventory.  Added a reference to the Help command in the
+unknown command message.
+
+Imported a modified version of the twisted logic from the Rocket which
+allows the names of scripts to be case sensitive and contain spaces.
+Note that, consequently, script names *are* case sensitive and that
+embedded (but not leading or trailing) spaces are significant.
+
+2020 June 16
+
+The implementation of command abbreviation broke the "Rot..." commands
+because they were shadowed by the "Rot" command.  I changed the test
+for the Rot command to a simple equality test instead of using abbrP()
+to test the prefix.
+
+The Restart command called resetState() before resetting the script,
+which had the irritating effect of, if the user had manually
+repositioned the cube with the viewer object editor before resetting,
+moving it back to its original location.  I added a call to update
+refPos() to the current llGetPos() to keep this from happening.
+
+2020 June 17
+
+Added logic to resetState() to cancel omega rotation of the root and
+child cubes if nonzero.
+
+2020 June 18
+
+Completed implementation of the Omega/[ll]TargetOmega command and
+tested for main and child with all available modifiers.  This is
+confusing, since for the root prim the axis of rotation is specified in
+region co-ordinates, but for a child prim it's in that prim's
+co-ordinates which are the current orientation of the root prim.
+Specifying the command with no arguments cancels any existing rotation,
+and rotation is halted when the script is reset.
+
+Added an optional floating point time argument to the Pause command
+which specifies a pause time in seconds, performed with llSleep().  If
+no argument is specified, the script is paused until the user touches
+the object, as before.
+
+Added the ability to cancel a running script by entering the Run
+command from chat with no arguments.  A message is displayed confirming
+the cancellation.
+
+Added the ability to specify an aim point in region co-ordinates in the
+Aim command.  If no point is specified, the previously set Target is
+used as before.
+
+Finished debugging and testing of the Aim command for the child cube.
+It divides out the root prim's rotation and forces Region mode when
+performing the child cube rotation.
+
+Made the Axes command accept the Child modifier and show the positive
+axes of the child cube in region co-ordinates.
+
+Modified the Status command to assemble all of its output into one
+string with new line characters and output with a single call on
+tawk().  This makes the output more readable and saves script memory as
+function calls consume a lot of pseudocode space.
+
+When “Set Angles radian” was in effect, the Status command still showed
+the child cube's rotation in degrees: fixed.
+
+When displaying the child cube information, the Status command now
+shows its rotation in both local (relative to the root prim) and global
+(region) co-ordinates.
+
+Changed the floating text legend for the child cube to show rotation in
+both local and global (region) co-ordinates, as well as the child's
+position in both local and global (root-relative) coordinates.
+
+Extended the Undo command so it works with Omega rotation.  Undoing
+back to zero Omega rotation resets and remaining local rotation to
+the origin with killOmega().
+
+2020 June 19
+
+Installed the general-purpose Script Processor from the Rocket,
+replacing the legacy "ad hack" version built into the main script. This
+helped a bit with our tight memory situation, but the main motivation
+was the script processor's support for nested script calls, looping,
+and sleep within the script.  The commands processed within the Script
+Processor still use the "Set script" syntax for the rocket: I may
+revise this to be consistent with our conventions, or make the
+revisions in the other direction: I haven't yet decided which.
+
+To avert an impending out of memory crisis, I created an Auxiliary
+Functions script and began by moving the Status command to it.  While I
+was at it, and luxuriating in the free memory on the Auxiliary script,
+I added the child cube's Omega status, which had been missing.
+
+Exported the updating of the floating text legends for the main and
+child cubes to the Auxiliary script.  This got our memory usage down
+to 88%.  We're getting there.
+
+Exported the output from the Axes command to the Auxiliary script.  This
+isn't a big win (only down to 87%), but it's a step toward eliminating
+the costly ef() function from the main script.
+
+Moved the display of target setting to the Auxiliary script.  This was
+the last use of the ef() function, allowing its elimination.  We're now
+down to 84% memory usage in the main script, which is comfortable.
+
+Added a call to the Auxiliary script Status display to request the
+Script Processor to show its status.
+
+Added display of the region name and its position on the grid to the
+Status output.
+
+Added display of Omega rotation to the floating text legend on both the
+main and the child cube.  Note that if the axis vector is not
+normalised when specified, it will be normalised when retrieved by
+llGetLinkPrimitiveParams() PRIM_OMEGA and its magnitude will have been
+used to scale the spin rate value supplied in the original function
+call.
+
+Implemented a new [ll]CastRay command which takes a direction vector
+and distance and reports up to 50 hits along the vector in the
+specified direction.  Hits on the orientation cube itself are not
+reported. This command takes the full suite of modifiers, and can map
+the direction vector into any of the co-ordinate systems available for
+either the main or child cubes.  If the distance is omitted, 10 metres
+is assumed, and if no direction vector is given, the positive Y axis
+(which is that used by the Aim command) is used.  This is implemented
+almost entirely in the Auxiliary Functions script and has only a 1%
+impact on memory usage by the main script.
+
+2020 June 20
+
+Added the target location to the Status output.  The target is shown
+only if set to other than ZERO_VECTOR.
+
+Changed the default Access setting to owner, as documented and
+consistent with other Fourmilab products.
+
+Added logic to the CastRay command in Auxiliary to interpret error
+codes from llCastRay and display a message explaining them.
+
+Replaced the "Run" command with "Script run", so all script operations
+are collected together.  You not stop a running script with "Script
+run" and no argument.
+
+Added an Echo command in the main script.  This allows getting rid of
+the hacked in leading double quote kludge in Script processor.  If we
+really wanted to restrict echo to within scripts, it should be "Script
+echo", but why impose that restriction?
+
+Eliminated the double quote gimmick from the Script Processor and
+revised all the test scripts to use the Echo command instead.
+
+Implemented "Rang" and "Rvec" as symbolic parameters permitted on
+commmands.  They expand, respectively, to a random angle and a random
+unit vector (uniformly distributed on the unit sphere).
+
+2020 June 21
+
+Added an "Rpos" symbolic parameter which returns a random position
+obtained by adding a random unit vector to the current position of the
+main or child cube, depending upon the setting of child.  This is
+intended for use with the Aim and Target commands and any which may be
+added that require a position as opposed to a direction vector.
+
+Due to an unfortunate confluence of our handling of upper and lower
+case input in scriptName() and the eccentricity of chat output
+functions not allowing output of blank lines, the ability to
+intersperse blank lines with an Echo command and no message didn't
+work: fixed.
+
+Added all of the valid items for the Set command in the message for an
+invalid entry, replacing the "TBD" place-holder.
+
+2020 June 22
+
+Added a "Clear" command which sends 12 new line characters to local
+chat to clear space.  This is mostly intended for use in scripts to
+draw attention to section breaks in a demonstration.  Unlike using a
+bunch of @Echo commands, it doesn't litter the chat with the object
+name on every line.
+
+The Restart command called resetState() before calling llResetScript().
+This was not only unnecessary, it could cause a race condition in which
+the Auxiliary Functions script received a legend update message after
+the main script had been restarted, which could cause the child cube
+legend, if previously enabled, to persist after the restart, which is
+supposed to hide the child cube and its legend entirely.
+
+Created demo video for YouTube.  The video resolution is 1072 x 784.
+
+2020 June 23
+
+Created local development Git repository in:
+    ~/w/SecondLife/OrientationCube/git
+with:
+    git init
+
+Added everything with --all.  Committed current state of development.
+
+Logged on to github.com.
+
+Created a new repository:
+    orientation_cube
+with access URLs:
+    HTTPS: https://github.com/Fourmilab/orientation_cube.git
+    SSH:   git@github.com:Fourmilab/orientation_cube.git
+
+Pushed the production directory to the repository with:
+    git remote add origin git@github.com:Fourmilab/orientation_cube.git
+    git push -u origin master

@@ -1,0 +1,39 @@
+
+    Aim [<X, Y, Z>]
+    Axes
+    Axes2Rot <forward> <left> <up>
+    AxisAngle2Rot <X, Y, Z> ang
+    CastRay <X, Y, Z> dist
+    Echo message
+    Help
+    Move <X, Y, Z>
+    Pause [time]
+    Probe[s] [X/Y/Z] [on/off]
+    Qrot <X, Y, Z, S>
+    Reset
+    Restart
+    Rot <X, Y, Z>
+    RotBetween <X, Y, Z> <X, Y, Z>
+    RotX ang
+
+
+
+
+    RotY ang
+    RotZ ang
+    Script run [script]
+          loop [n]
+          end
+    Set Access owner/group/public
+        Angles degrees/radians
+        Channel n
+        Child on/off
+        Echo on/off
+        Legend on/off
+        Runrate t
+    SetRot <X, Y, Z>
+    Status
+    Target <X, Y, Z> / me
+    TargetOmega <X, Y, Z> spinrate gain
+    Undo
+
