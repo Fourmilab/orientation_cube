@@ -60,6 +60,9 @@ reset
     region child castray <0,0,-1> 20
     reset
 
+@echo Clear
+    clear
+
 @echo Move
 
     global probes on
