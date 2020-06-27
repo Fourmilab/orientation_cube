@@ -9,19 +9,22 @@ and operations such as vector products and rotation of vectors, and
 composition of rotations which do not behave like arithmetic with
 numbers.
 
-Fourmilab's Orientation Cube is an object intended to aid in mastery
-of these concepts.  It displays orientation in a simple and obvious way,
+Fourmilab's Orientation Cube is an object intended to aid in mastery of
+these concepts.  It displays orientation in a simple and obvious way,
 compatible with the nomenclature and colour code used by the editing
 facilities in Second Life, and responds to commands sent on local chat
-which allow experimenting with and demonstrating a wide variety of
+which allow experimenting and demonstrating a wide variety of
 transformations (rotations and translations [moves]) with immediate
 feedback from the cube.
+
+A video demonstration of the cube's operation may be viewed on:
+    https://www.youtube.com/watch?v=NdD9MpFfEBg
 
 Co-ordinate Systems
 
 Further complicating matters, script developers in Second Life may find
 themselves working in multiple co-ordinate systems and needing to
-convert among them.  The principal co-ordinate systems used by the
+convert accordingly.  The principal co-ordinate systems used by the
 Orientation Cube are as follows.
 
     Grid co-ordinates
@@ -42,14 +45,14 @@ Orientation Cube are as follows.
     Region (Global) co-ordinates
         These co-ordinates are absolute within a given region.  Regions
         in Second Life are 256 by 256 metres in size, and have absolute
-        X and Y co-ordinates which in the range from 0 to 255.9999....
-        The Z co-ordinate indicates altitude, and ranges from 0 to
-        around 5000 metres.  Objects placed at very high altitudes may
-        run into positioning problems due to truncation in Second
-        Life's single-precision floating point numbers.  Grid
-        co-ordinates are sometimes used to identify the location of a
-        region in the world of Second Life, but as objects cannot span
-        region boundaries, they may be ignored in almost all scripting
+        X and Y co-ordinates in the range from 0 to 255.9999.... The Z
+        co-ordinate indicates altitude, and ranges from 0 to around
+        5000 metres.  Objects placed at very high altitudes may run
+        into positioning problems due to truncation in Second Life's
+        single-precision floating point numbers.  Grid co-ordinates are
+        sometimes used to identify the location of a region in the
+        world of Second Life, but as objects cannot span region
+        boundaries, they may be ignored in almost all scripting
         operations.  The X, Y, and Z axes within a region are at
         uniform directions within the region and may be displayed by
         editing any object.  The axes are conventionally colour coded:
@@ -64,10 +67,10 @@ Orientation Cube are as follows.
         that (0,0,0) in the object co-ordinate system corresponds to
         the object's location within the region, which may change if
         the object is moved.  The object's local axes initially align
-        with those of the region, but if the object is rotated, they
-        will be rotated with respect to those of the region.  When you
-        move an object in its object co-ordinates, motion will be along
-        its object axes, not those of the region.
+        with those of the region, but if the object is rotated, the
+        local axes will be rotated with respect to those of the region.
+        When you move an object in its object co-ordinates, motion will
+        be along its local object axes, not those of the region.
 
     Link (Local) co-ordinates
         If you assemble a composite object by linking together two or
@@ -170,7 +173,7 @@ case-insensitive: “Rot”, “rot”, and “ROT” are equivalent.
             in any of the co-ordinate systems specified by modifiers,
             and report all (up to 50) hits on objects other than the
             Orientation Cube itself.  For each hit, the object's name,
-            location in region co-ordinates, and distance is shown.  A
+            location in region co-ordinates, and distance are shown.  A
             hit on land shows an object name of "(Terrain)".
 
         Clear
@@ -205,7 +208,8 @@ case-insensitive: “Rot”, “rot”, and “ROT” are equivalent.
         Pause [time]
             Suspend the running script for the number of seconds given
             by time.  If time is omitted, the script is paused until
-            the object is touched.
+            the object is touched.  The Pause command is ignored if no
+            script is running.
 
         [G/R] Probe[s] [X/Y/Z] [on/off]
             Display or hide the axis orientation probe(s).  Long probes
