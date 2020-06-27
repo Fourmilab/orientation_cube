@@ -92,6 +92,7 @@
 
     integer scriptActive = FALSE;   // Are we reading from a script ?
     integer scriptSuspend = FALSE;  // Suspend script execution for asynchronous event
+    float scriptPauseTime;          // Pause between script commands
 
     //  Auxiliary Messages
 //  integer LM_AX_INIT = 10;        // Initialise
@@ -390,7 +391,6 @@
                     float x = 2 * x1 * llSqrt(1 - (x1 * x1) - (x2 * x2));
                     float y = 2 * x2 * llSqrt(1 - (x1 * x1) - (x2 * x2));
                     float z = 1 - 2 * ((x1 * x1) + (x2 * x2));
-//tawk("Rvec " + (string) <x, y, z> + " mag " + (string) llVecMag(<x, y, z>));
                     if (rpos) {
                         vector pos;
                         if (child) {
@@ -680,7 +680,6 @@
             } else {
                 aimPoint = targetSet;
             }
-//tawk(lmessage + "  --  " + (string) aimPoint + " : " + sparam);
             if (aimPoint != ZERO_VECTOR) {
                 if (child) {
                     //  Compute normalized vector from child to target
@@ -712,7 +711,6 @@
                     zang += PI + PI_BY_TWO;
                     rotation zrot = llEuler2Rot(<0, 0, zang>);
                     updateRotation(llAxisAngle2Rot(<1, 0, 0>, xang) * zrot);
-//tawk("xang " + (string) xang + " zrot " + (string) zrot);
                 }
             } else {
                 tawk("No target set.  Use the Target command to specify one.");
@@ -821,10 +819,10 @@
         //  Pause                       Suspend script until touched
 
         } else if (abbrP(command, "pa")) {
-            if (argc > 1) {
-                llSleep((float) sparam);
-            } else {
-                if (scriptActive) {
+            if (scriptActive) {
+                if (argc > 1) {
+                    scriptPauseTime = (float) sparam;
+                } else {
                     scriptSuspend = TRUE;
                     tawk("Paused: touch to resume.");
                 }
@@ -893,9 +891,14 @@
         //  Restart                     Restart script, restoring initial conditions
 
         } else if (abbrP(command, "rest")) {
-//            refPos = llGetPos();
-//            resetState();
             llResetScript();
+            /*  You might think we'd want to reset the other
+                scripts here with llResetOtherScript().  But
+                there's no need, since the Auxiliary Functions
+                script has no mutable state set by state_entry()
+                and re-initialisation of the Script Processor is
+                done by sending it a LM_SP_INIT link message in
+                out own state_entry() after the reset.  */
 
         //  Rot <X, Y, Z>               Rotate to Euler angles <X, Y, Z>
         //  [ll]Euler2Rot <X, Y, Z>
@@ -1247,10 +1250,14 @@
 
             } else if (num == LM_SP_INPUT) {
                 if (str != "") {                // Process only if not hard EOF
+                    scriptPauseTime = ncRate;   // Set default pause time
                     integer stat = processCommand(id, str, TRUE); // Some commands set scriptSuspend
                     if (stat) {
                         if (!scriptSuspend) {
-                            llSetTimerEvent(ncRate);        // Set timer to get next command
+                            if (scriptPauseTime <= 0) {
+                                scriptPauseTime = ncRate;
+                            }
+                            llSetTimerEvent(scriptPauseTime);   // Set timer to get next command
                         }
                     } else {
                         //  Error in script command.  Abort script input.
@@ -1282,5 +1289,4 @@
             }
             llSetTimerEvent(0);
         }
-
     }

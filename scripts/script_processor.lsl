@@ -97,12 +97,10 @@
                     iters = llList2Integer(args, 2);
                 }
                 ncLoops = [ iters, ncLine ] + ncLoops;
-//llOwnerSay("Start loop " + llList2CSV(ncLoops));
 
             //  Script end                  -- End loop
 
             } else if (abbrP(command, "en")) {
-//llOwnerSay("End loop " + llList2CSV(ncLoops));
                 integer iters = llList2Integer(ncLoops, 0);
 
                 if ((iters > 1) || (iters < 0)) {
