@@ -5,7 +5,9 @@
 [Fourmilab Orientation Cube](https://marketplace.secondlife.com/p/Fourmilab-Orientation-Cube/19823081)
 is a resource for Second Life script programmers to understand
 rotations and translation and how the interact with local and
-global co-ordinate systems.
+global co-ordinate systems.  A
+[video demonstration](https://www.youtube.com/watch?v=NdD9MpFfEBg)
+of the Orientation Cube is available on YouTube.
 
 ![Fourmilab Orientation Cube](marketplace/images/OrientationCube_2.png)
 
