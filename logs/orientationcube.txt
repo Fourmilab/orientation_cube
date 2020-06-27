@@ -555,6 +555,8 @@ legend, if previously enabled, to persist after the restart, which is
 supposed to hide the child cube and its legend entirely.
 
 Created demo video for YouTube.  The video resolution is 1072 x 784.
+Published on YouTube at:
+    https://www.youtube.com/watch?v=NdD9MpFfEBg
 
 2020 June 23
 
@@ -576,3 +578,26 @@ with access URLs:
 Pushed the production directory to the repository with:
     git remote add origin git@github.com:Fourmilab/orientation_cube.git
     git push -u origin master
+
+Confirmed that my local "git sync" command works with the remote
+repository.
+
+2020 June 24
+
+Redesigned how the Pause command works.  Previously, a timed pause
+caused the main script to llSleep() for the specified time.  This did
+create a pause, but it made the script unresponsive while the pause was
+in effect and thus prevented cancelling a running script which made a
+ridiculously long (“Pause 3600”) pause.  I revised this to allow
+commands in processCommand to set a new variable, scriptPauseTime,
+which overrides the default script run rate of ncRate (set by Set
+runrate).  Thus, the timer is now used to control when the next line of
+the script is read, and the script remains responsive to chat commands
+received during the pause via listen(). The Pause command thus works
+only while a script is running, which is fine because it makes
+absolutely no sense at other times.  A pause time of zero or a negative
+number is ignored, and ncRate is used instead.
+
+2020 June 27
+
+Released version 1.0.
